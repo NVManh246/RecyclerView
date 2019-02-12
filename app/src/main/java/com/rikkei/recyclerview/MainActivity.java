@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -25,10 +26,14 @@ public class MainActivity extends AppCompatActivity
     private ImageView imageButton;
     private boolean isList = true;
 
+    private ContactDAO contactDAO;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ContactDatabase contactDatabase = ContactDatabase.getInstance(this);
+        contactDAO = contactDatabase.contactDAO();
         initView();
     }
 
@@ -43,6 +48,9 @@ public class MainActivity extends AppCompatActivity
         imageButton = findViewById(R.id.image_button);
         imageButton.setOnClickListener(this);
         findViewById(R.id.floating_button_add).setOnClickListener(this);
+
+        contacts.addAll(contactDAO.getAllContact());
+        contactAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -92,9 +100,11 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v) {
                 String name = etName.getText().toString();
                 String phoneNumber = etPhoneNumber.getText().toString();
-                contacts.add(0, new Contact(name, phoneNumber));
+                Contact contact = new Contact(name, phoneNumber);
+                contacts.add(0, contact);
                 contactAdapter.notifyItemInserted(0);
                 dialog.cancel();
+                contactDAO.insertContact(contact);
             }
         });
         dialog.show();
@@ -115,6 +125,7 @@ public class MainActivity extends AppCompatActivity
                 contacts.remove(position);
                 contactAdapter.notifyItemRemoved(position);
                 dialog.cancel();
+                contactDAO.deleteContact(contact);
             }
         });
 
@@ -127,6 +138,7 @@ public class MainActivity extends AppCompatActivity
                 contact.setNumberPhone(phoneNumber);
                 contactAdapter.notifyItemChanged(position);
                 dialog.cancel();
+                contactDAO.updateContact(contact);
             }
         });
         dialog.show();
